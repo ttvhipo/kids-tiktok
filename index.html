@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KidShorts">
+    <title>KidShorts - Kid-Friendly Short Videos</title>
+    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.5.0/collection/components/icon/icon.svg">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.5.0/css/ionicons.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .video-container {
+            position: relative;
+            height: calc(100vh - 50px);
+            width: 100vw;
+            overflow: hidden;
+        }
+        
+        .video-scroll {
+            height: 100%;
+            width: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .video-item {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .placeholder-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+        }
+        
+        .video-info {
+            position: absolute;
+            bottom: 100px;
+            left: 10px;
+            z-index: 10;
+            max-width: 80%;
+        }
+        
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        
+        .video-description {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        
+        .video-creator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .creator-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #f0f0f0;
+        }
+        
+        .creator-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .video-actions {
+            position: absolute;
+            right: 10px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .action-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .action-icon {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        
+        .action-count {
+            font-size: 12px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #333;
+        }
+        
+        .nav-item {
+            color: #fff;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+        }
+        
+        .nav-text {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .active {
+            color: #5af;
+        }
+        
+        .parental-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            z-index: 20;
+        }
+        
+        .parental-controls-icon {
+            margin-right: 5px;
+            font-size: 16px;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #5af;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 1s ease-in-out 2s forwards;
+        }
+
+        .loading-logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .tab-selector {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background-color: #5af;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="loading-logo">KidShorts</div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header with Tabs -->
+        <div class="header">
+            <div class="tab-selector">
+                <div class="tab active">For You</div>
+                <div class="tab">Educational</div>
+                <div class="tab">Fun</div>
+            </div>
+        </div>
+
+        <!-- Parental Controls Button -->
+        <div class="parental-controls">
+            <span class="parental-controls-icon">🔒</span>
+            <span>Parent Settings</span>
+        </div>
+
+        <!-- Video Feed -->
+        <div class="video-container">
+            <div class="video-scroll">
+                <!-- Video 1 -->
+                <div class="video-item">
+                    <img src="/api/placeholder/400/320" alt="placeholder" class="placeholder-video" />
+                    <div class="video-info">
+                        <div class="video-title">Amazing Science Experiment for Kids!</div>
+                        <div class="video-description">Learn about density with this cool colorful experiment</div>
+                        <div class="video-creator">
+                            <div class="creator-avatar"></div>
+                            <div class="creator-name">ScienceKids</div>
+                        </div>
+                    </div>
+                    <div class="video-actions">
+                        <div class="action-button">
+                            <div class="action-icon">❤️</div>
+                            <div class="action-count">1.2k</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">💬</div>
+                            <div class="action-count">42</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">⭐</div>
+                            <div class="action-count">Save</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 2 -->
+                <div class="video-item">
+                    <img src="/api/placeholder/400/320" alt="placeholder" class="placeholder-video" />
+                    <div class="video-info">
+                        <div class="video-title">Cute Animals Playing Together</div>
+                        <div class="video-description">Watch these adorable animals become best friends</div>
+                        <div class="video-creator">
+                            <div class="creator-avatar"></div>
+                            <div class="creator-name">KidAnimalLove</div>
+                        </div>
+                    </div>
+                    <div class="video-actions">
+                        <div class="action-button">
+                            <div class="action-icon">❤️</div>
+                            <div class="action-count">3.4k</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">💬</div>
+                            <div class="action-count">156</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">⭐</div>
+                            <div class="action-count">Save</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Video 3 -->
+                <div class="video-item">
+                    <img src="/api/placeholder/400/320" alt="placeholder" class="placeholder-video" />
+                    <div class="video-info">
+                        <div class="video-title">DIY Craft: Paper Butterflies</div>
+                        <div class="video-description">Easy crafts you can make at home with simple materials</div>
+                        <div class="video-creator">
+                            <div class="creator-avatar"></div>
+                            <div class="creator-name">CraftyKids</div>
+                        </div>
+                    </div>
+                    <div class="video-actions">
+                        <div class="action-button">
+                            <div class="action-icon">❤️</div>
+                            <div class="action-count">2.8k</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">💬</div>
+                            <div class="action-count">94</div>
+                        </div>
+                        <div class="action-button">
+                            <div class="action-icon">⭐</div>
+                            <div class="action-count">Save</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-text">Home</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">🔍</div>
+                <div class="nav-text">Discover</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">📚</div>
+                <div class="nav-text">Learn</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div class="nav-text">Profile</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add PWA manifest inline
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.setAttribute('href', 'data:application/manifest+json,' + 
+            encodeURIComponent(JSON.stringify({
+                "name": "KidShorts",
+                "short_name": "KidShorts",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#5af",
+                "theme_color": "#5af",
+                "description": "Kid-friendly short videos",
+                "icons": [{
+                    "src": "https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.5.0/collection/components/icon/icon.svg",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }]
+            }))
+        );
+        document.head.appendChild(manifestLink);
+
+        // Simple video interaction
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoItems = document.querySelectorAll('.video-item');
+            const videoScroll = document.querySelector('.video-scroll');
+            const tabs = document.querySelectorAll('.tab');
+            const parentalControlsBtn = document.querySelector('.parental-controls');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            // Handle video playback simulation
+            videoItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (!e.target.closest('.video-actions')) {
+                        // Toggle play/pause visual effect
+                        const video = this.querySelector('.placeholder-video');
+                        if (video.style.opacity === '0.7') {
+                            video.style.opacity = '1';
+                        } else {
+                            video.style.opacity = '0.7';
+                        }
+                    }
+                });
+            });
+            
+            // Handle tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Simulate content loading
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.className = 'loading-spinner';
+                    loadingIndicator.style.position = 'absolute';
+                    loadingIndicator.style.top = '50%';
+                    loadingIndicator.style.left = '50%';
+                    loadingIndicator.style.transform = 'translate(-50%, -50%)';
+                    document.querySelector('.video-container').appendChild(loadingIndicator);
+                    
+                    setTimeout(() => {
+                        loadingIndicator.remove();
+                        videoScroll.scrollTop = 0;
+                    }, 500);
+                });
+            });
+            
+            // Handle parental controls
+            parentalControlsBtn.addEventListener('click', function() {
+                alert('Parental Controls: This would open a password-protected settings panel where you can customize content filters, set time limits, and review viewing history.');
+            });
+            
+            // Handle bottom navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    navItems.forEach(navItem => navItem.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show alert for non-implemented sections
+                    if (!this.classList.contains('active')) {
+                        alert('This section would contain ' + this.querySelector('.nav-text').textContent + ' content.');
+                    }
+                });
+            });
+
+            // Add to homescreen instruction
+            setTimeout(() => {
+                if (!window.navigator.standalone) {
+                    const instruction = document.createElement('div');
+                    instruction.style.position = 'fixed';
+                    instruction.style.bottom = '60px';
+                    instruction.style.left = '50%';
+                    instruction.style.transform = 'translateX(-50%)';
+                    instruction.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                    instruction.style.color = 'white';
+                    instruction.style.padding = '10px 20px';
+                    instruction.style.borderRadius = '20px';
+                    instruction.style.fontSize = '14px';
+                    instruction.style.textAlign = 'center';
+                    instruction.style.zIndex = '999';
+                    instruction.innerHTML = 'Add to Home Screen: Tap <span style="font-size:18px">📲</span> and then "Add to Home Screen"';
+                    document.body.appendChild(instruction);
+                    
+                    setTimeout(() => {
+                        instruction.style.animation = 'fadeOut 1s forwards';
+                        setTimeout(() => instruction.remove(), 1000);
+                    }, 8000);
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
